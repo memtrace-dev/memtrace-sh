@@ -1,11 +1,423 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
+import Nav from '../components/Nav.astro';
+import HeroTerminal from '../components/HeroTerminal.astro';
+import TerminalWindow from '../components/TerminalWindow.astro';
+import CodeBlock from '../components/CodeBlock.astro';
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+const agents = ['windsurf', 'claude-code', 'cursor', 'vscode', 'opencode', 'gemini'];
+
+const mcpTools = [
+  ['memory_save', 'Save a decision, convention, or fact'],
+  ['memory_recall', 'Search by natural language'],
+  ['memory_get', 'Fetch full content by ID'],
+  ['memory_context', "Get context for the files you're editing"],
+  ['memory_prompt', "Capture the user's goal at session start"],
+  ['memory_forget', 'Delete by ID or query'],
+  ['memory_update', 'Edit an existing memory'],
+];
+
+const release = await fetch('https://api.github.com/repos/memtrace-dev/memtrace/releases/latest')
+  .then(r => r.json())
+  .catch(() => null);
+
+const version: string = release?.tag_name ?? 'latest';
+const releaseUrl: string = release?.html_url ?? 'https://github.com/memtrace-dev/memtrace/releases/latest';
+
+function assetUrl(suffix: string): string {
+  const v = version.replace(/^v/, '');
+  return `https://github.com/memtrace-dev/memtrace/releases/download/${version}/memtrace_${v}_${suffix}`;
+}
+
+const downloads = [
+  { label: 'macOS (Apple Silicon)', url: assetUrl('darwin_arm64.tar.gz') },
+  { label: 'macOS (Intel)',         url: assetUrl('darwin_amd64.tar.gz') },
+  { label: 'Linux (amd64)',         url: assetUrl('linux_amd64.tar.gz') },
+  { label: 'Linux (arm64)',         url: assetUrl('linux_arm64.tar.gz') },
+  { label: 'Windows',               url: assetUrl('windows_amd64.zip') },
+];
 ---
 
 <Layout>
-	<Welcome />
+  <div class="min-h-screen bg-background text-primary font-sans transition-colors duration-200">
+
+    <Nav />
+
+    <main>
+      <!-- Hero -->
+      <section class="pt-32 pb-24 md:pt-48 md:pb-32 px-6 max-w-7xl mx-auto">
+        <div class="max-w-3xl">
+          <h1 class="text-4xl md:text-6xl font-semibold tracking-tight leading-[1.1] mb-6">
+            Your AI coding agent forgets everything.<br />
+            <span class="text-muted">memtrace doesn't.</span>
+          </h1>
+          <p class="text-lg md:text-xl text-muted mb-10 max-w-2xl leading-relaxed">
+            Persistent, searchable memory for Claude Code, Cursor, Windsurf, and any MCP agent — local, instant, zero-config.
+          </p>
+
+          <div class="mb-10">
+            <HeroTerminal code="brew install memtrace-dev/tap/memtrace" />
+          </div>
+
+          <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <a href="#install" class="inline-flex items-center justify-center px-6 py-3 rounded-lg bg-accent text-background font-medium hover:bg-accent/90 transition-colors">
+              Get started
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2">
+                <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+              </svg>
+            </a>
+            <a href="https://github.com/memtrace-dev/memtrace" target="_blank" class="inline-flex items-center justify-center px-6 py-3 rounded-lg border border-border-color text-primary hover:bg-surface transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+                <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.2c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/>
+              </svg>
+              View on GitHub
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- The Problem -->
+      <section class="py-24 px-6 max-w-7xl mx-auto border-t border-border-color">
+        <h2 class="text-xs font-semibold tracking-[0.2em] text-muted uppercase mb-8">The Problem</h2>
+
+        <div class="grid md:grid-cols-2 gap-8">
+          <TerminalWindow title="Without memtrace" class="h-full">
+            <div class="text-muted mb-2">Monday</div>
+            <div class="pl-4 border-l-2 border-border-color mb-6">
+              <div class="mb-1"><span class="text-primary">You:</span> "we use JWT RS256, stateless, no session storage"</div>
+              <div><span class="text-primary">Claude:</span> understood <span class="text-accent">✓</span></div>
+            </div>
+            <div class="text-muted mb-2">Tuesday (new session)</div>
+            <div class="pl-4 border-l-2 border-border-color">
+              <div><span class="text-primary">Claude:</span> "how does auth work in this project?"</div>
+            </div>
+          </TerminalWindow>
+
+          <TerminalWindow title="With memtrace" class="h-full">
+            <div class="text-muted mb-2">Monday</div>
+            <div class="pl-4 border-l-2 border-accent/30 mb-6">
+              <div><span class="text-accent">agent</span> → memory_save("JWT RS256, stateless, no session storage")</div>
+            </div>
+            <div class="text-muted mb-2">Tuesday (new session)</div>
+            <div class="pl-4 border-l-2 border-accent/30">
+              <div class="mb-1"><span class="text-accent">agent</span> → memory_recall("auth")</div>
+              <div class="text-muted">← "JWT RS256 — stateless, no session storage" · decision · 1d ago</div>
+            </div>
+          </TerminalWindow>
+        </div>
+
+        <p class="mt-12 text-lg text-muted max-w-3xl leading-relaxed">
+          Every new chat starts from zero. You've explained your stack, your conventions, why you chose Postgres. Tomorrow it's gone. <span class="text-primary font-medium">memtrace fixes that.</span>
+        </p>
+      </section>
+
+      <!-- Setup in 60 seconds -->
+      <section class="py-24 px-6 max-w-7xl mx-auto border-t border-border-color">
+        <h2 class="text-xs font-semibold tracking-[0.2em] text-muted uppercase mb-8">Setup in 60 seconds</h2>
+
+        <div class="grid md:grid-cols-3 gap-12 md:gap-8">
+          <div>
+            <div class="text-accent font-mono text-xl mb-4">01</div>
+            <h3 class="text-xl font-medium mb-4">Init</h3>
+            <div class="bg-surface border border-border-color rounded-lg p-4 font-mono text-sm mb-6 relative overflow-hidden h-[74px] flex flex-col justify-center">
+              <div class="absolute inset-0 pointer-events-none rounded-lg shadow-[inset_0_1px_0_0_var(--color-shadow-inner)]"></div>
+              <div class="text-muted">$ cd your-project</div>
+              <div class="text-primary">$ memtrace init</div>
+            </div>
+            <p class="text-muted leading-relaxed">
+              Creates a local database. Auto-imports your existing Claude Code memories, Cursor rules, and relevant git history — so memory starts populated, not empty.
+            </p>
+          </div>
+
+          <div>
+            <div class="text-accent font-mono text-xl mb-4">02</div>
+            <h3 class="text-xl font-medium mb-4">Wire up your agent</h3>
+            <div class="bg-surface border border-border-color rounded-lg p-4 font-mono text-sm mb-6 relative overflow-hidden h-[74px] flex flex-col justify-start">
+              <div class="absolute inset-0 pointer-events-none rounded-lg shadow-[inset_0_1px_0_0_var(--color-shadow-inner)]"></div>
+              <div class="text-primary">$ memtrace setup</div>
+            </div>
+            <p class="text-muted leading-relaxed">
+              Detects which agents you use and writes their MCP config. Works with Claude Code, Cursor, Windsurf, VS Code, OpenCode, and Gemini CLI.
+            </p>
+          </div>
+
+          <div>
+            <div class="text-accent font-mono text-xl mb-4">03</div>
+            <h3 class="text-xl font-medium mb-4">Start coding</h3>
+            <div class="bg-surface border border-border-color rounded-lg p-4 font-mono text-sm mb-6 relative overflow-hidden h-[74px] flex flex-col justify-start">
+              <div class="absolute inset-0 pointer-events-none rounded-lg shadow-[inset_0_1px_0_0_var(--color-shadow-inner)]"></div>
+              <span class="text-accent">Ready.</span>
+            </div>
+            <p class="text-muted leading-relaxed">
+              Your agent now has persistent memory. It saves decisions as it works. It recalls context before editing files. You never explain the same thing twice.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Why memtrace -->
+      <section class="py-24 px-6 max-w-7xl mx-auto border-t border-border-color">
+        <h2 class="text-xs font-semibold tracking-[0.2em] text-muted uppercase mb-8">Why memtrace</h2>
+
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="bg-surface border border-border-color rounded-xl p-8 relative overflow-hidden">
+            <div class="absolute inset-0 pointer-events-none rounded-xl shadow-[inset_0_1px_0_0_var(--color-shadow-inner)]"></div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-accent mb-6">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+            </svg>
+            <h3 class="text-xl font-medium mb-3">Smarter search</h3>
+            <p class="text-muted leading-relaxed">
+              Not just keywords. Hybrid BM25 + vector semantic search — so recalling "JWT signing algorithm" finds the memory you saved as "use RS256 for tokens". No exact match required.
+            </p>
+          </div>
+
+          <div class="bg-surface border border-border-color rounded-xl p-8 relative overflow-hidden">
+            <div class="absolute inset-0 pointer-events-none rounded-xl shadow-[inset_0_1px_0_0_var(--color-shadow-inner)]"></div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-accent mb-6">
+              <path d="M10 12.5 8 15l2 2.5"/><path d="m14 12.5 2 2.5-2 2.5"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/>
+            </svg>
+            <h3 class="text-xl font-medium mb-3">File-aware context</h3>
+            <p class="text-muted leading-relaxed">
+              <code class="font-mono text-accent bg-accent-dim/30 px-1.5 py-0.5 rounded text-sm">memory_context(file_paths)</code> surfaces every convention and decision linked to the files your agent is about to edit — before it touches a line of code.
+            </p>
+          </div>
+
+          <div class="bg-surface border border-border-color rounded-xl p-8 relative overflow-hidden">
+            <div class="absolute inset-0 pointer-events-none rounded-xl shadow-[inset_0_1px_0_0_var(--color-shadow-inner)]"></div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-accent mb-6">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <h3 class="text-xl font-medium mb-3">Memory that ages gracefully</h3>
+            <p class="text-muted leading-relaxed">
+              Confidence decays exponentially. Frequently recalled memories stay fresh. Stale ones fade. <code class="font-mono text-primary bg-background px-1.5 py-0.5 rounded text-sm border border-border-color">memtrace scan</code> flags memories whose referenced files have changed.
+            </p>
+          </div>
+
+          <div class="bg-surface border border-border-color rounded-xl p-8 relative overflow-hidden">
+            <div class="absolute inset-0 pointer-events-none rounded-xl shadow-[inset_0_1px_0_0_var(--color-shadow-inner)]"></div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-accent mb-6">
+              <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <h3 class="text-xl font-medium mb-3">Private by design</h3>
+            <p class="text-muted leading-relaxed">
+              Data lives in <code class="font-mono text-primary bg-background px-1.5 py-0.5 rounded text-sm border border-border-color">.memtrace/memtrace.db</code> inside your project. No account. No telemetry. Wrap sensitive values in <code class="font-mono text-primary bg-background px-1.5 py-0.5 rounded text-sm border border-border-color">&lt;private&gt;...&lt;/private&gt;</code> — stripped before storage. The database never sees them.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Works with -->
+      <section class="py-24 px-6 max-w-7xl mx-auto border-t border-border-color">
+        <h2 class="text-xs font-semibold tracking-[0.2em] text-muted uppercase mb-8">Works with</h2>
+
+        <div class="flex flex-wrap gap-3 mb-12">
+          {['Claude Code', 'Cursor', 'Windsurf', 'VS Code', 'OpenCode', 'Gemini CLI'].map(agent => (
+            <div class="px-4 py-2 rounded-full border border-border-color bg-surface text-sm font-medium">
+              {agent}
+            </div>
+          ))}
+        </div>
+
+        <TerminalWindow>
+          <div>
+            <span class="text-primary">$ memtrace setup</span>
+            <span class="text-muted ml-10"># auto-detects all agents</span>
+          </div>
+          <div class="flex items-center mt-1">
+            <span class="text-primary whitespace-pre">$ memtrace setup </span>
+            <span class="text-primary inline-flex items-center min-w-[105px]">
+              <span id="agent-text"></span><span class="inline-block w-2 h-4 bg-accent ml-[2px] animate-pulse"></span>
+            </span>
+            <span class="text-muted ml-4"># or target one</span>
+          </div>
+        </TerminalWindow>
+      </section>
+
+      <!-- MCP Tools -->
+      <section class="py-24 px-6 max-w-7xl mx-auto border-t border-border-color">
+        <h2 class="text-xs font-semibold tracking-[0.2em] text-muted uppercase mb-8">The tools your agent gets</h2>
+
+        <div class="bg-surface border border-border-color rounded-xl overflow-hidden relative">
+          <div class="absolute inset-0 pointer-events-none rounded-xl shadow-[inset_0_1px_0_0_var(--color-shadow-inner)]"></div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse min-w-[600px]">
+              <thead>
+                <tr class="border-b border-border-color bg-background/50">
+                  <th class="py-4 px-6 font-medium text-sm text-muted w-1/3">Tool</th>
+                  <th class="py-4 px-6 font-medium text-sm text-muted">Description</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-border-color">
+                {mcpTools.map(([tool, desc]) => (
+                  <tr class="hover:bg-background/30 transition-colors">
+                    <td class="py-4 px-6 font-mono text-accent text-sm">{tool}</td>
+                    <td class="py-4 px-6 text-primary text-sm">{desc}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Pricing -->
+      <section class="py-24 px-6 max-w-7xl mx-auto border-t border-border-color">
+        <h2 class="text-xs font-semibold tracking-[0.2em] text-muted uppercase mb-8">Pricing</h2>
+
+        <div class="bg-surface border border-border-color rounded-xl p-8 md:p-12 relative overflow-hidden">
+          <div class="absolute inset-0 pointer-events-none rounded-xl shadow-[inset_0_1px_0_0_var(--color-shadow-inner)]"></div>
+
+          <div class="flex flex-col md:flex-row items-center justify-between gap-12">
+            <div class="max-w-xl w-full">
+              <h3 class="text-4xl font-semibold mb-4">$0 <span class="text-muted font-normal text-2xl">/ forever</span></h3>
+              <p class="text-lg text-muted mb-8 leading-relaxed">
+                memtrace is open source and runs entirely on your machine. Your code and your memories never leave your laptop.
+              </p>
+              <div class="flex flex-wrap gap-3">
+                {[['Local only'], ['Open source'], ['Unlimited memories']].map(([label]) => (
+                  <div class="flex items-center text-sm text-primary bg-background border border-border-color px-4 py-2 rounded-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-accent mr-2">
+                      <path d="M20 6 9 17l-5-5"/>
+                    </svg>
+                    {label}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div class="bg-background border border-border-color rounded-lg p-6 font-mono text-sm w-full max-w-sm relative">
+              <div class="absolute inset-0 pointer-events-none rounded-lg shadow-[inset_0_1px_0_0_var(--color-shadow-inner)]"></div>
+              <div class="text-muted mb-6">// No API keys required</div>
+              <div class="space-y-3 mb-6">
+                {[
+                  ['Monthly subscription', '$0.00'],
+                  ['Cloud storage fees', '$0.00'],
+                  ['Privacy compromises', '0'],
+                ].map(([label, value]) => (
+                  <div class="flex justify-between items-center">
+                    <span class="text-primary">{label}</span>
+                    <span class="text-accent">{value}</span>
+                  </div>
+                ))}
+              </div>
+              <div class="border-t border-border-color pt-4 flex justify-between items-center font-bold">
+                <span class="text-primary">Total cost</span>
+                <span class="text-accent">$0.00</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Install -->
+      <section id="install" class="py-24 px-6 max-w-7xl mx-auto border-t border-border-color">
+        <h2 class="text-xs font-semibold tracking-[0.2em] text-muted uppercase mb-8">Get Started</h2>
+
+        <div class="grid md:grid-cols-2 gap-12">
+          <div>
+            <h3 class="text-lg font-medium mb-4">Homebrew</h3>
+            <div class="mb-8">
+              <CodeBlock code="brew install memtrace-dev/tap/memtrace" />
+            </div>
+            <h3 class="text-lg font-medium mb-4">Go</h3>
+            <div>
+              <CodeBlock code="go install github.com/memtrace-dev/memtrace/cmd/memtrace@latest" />
+            </div>
+          </div>
+
+          <div class="flex flex-col justify-center items-start md:pl-12 md:border-l border-border-color">
+            <a href={releaseUrl} target="_blank" class="inline-flex items-center text-lg font-medium text-primary hover:text-accent transition-colors mb-1 group">
+              Download binary
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 group-hover:translate-x-1 transition-transform">
+                <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+              </svg>
+            </a>
+            <div class="text-xs text-muted font-mono mb-6">{version}</div>
+            <div class="flex flex-col gap-2 text-sm font-mono">
+              {downloads.map(({ label, url }) => (
+                <a href={url} class="text-muted hover:text-primary transition-colors">{label}</a>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-12 px-6 max-w-7xl mx-auto border-t border-border-color flex flex-col md:flex-row justify-between items-center gap-6">
+      <div class="flex items-center gap-4 text-sm text-muted">
+        <span class="font-mono text-primary">memtrace</span>
+        <span>&middot;</span>
+        <span>MIT License</span>
+      </div>
+      <div class="flex items-center gap-6 text-sm text-muted">
+        <a href="https://github.com/memtrace-dev/memtrace" target="_blank" class="hover:text-primary transition-colors">GitHub</a>
+        <a href="https://github.com/memtrace-dev/memtrace/blob/main/README.md" target="_blank" class="hover:text-primary transition-colors">Docs</a>
+        <a href="https://github.com/memtrace-dev/memtrace/releases" target="_blank" class="hover:text-primary transition-colors">Releases</a>
+      </div>
+      <div class="text-sm text-muted">
+        Built by <a href="https://github.com/SebastianPuchet" target="_blank" class="text-primary hover:text-accent transition-colors">Sebastian Puchet</a>
+      </div>
+    </footer>
+  </div>
 </Layout>
+
+<script>
+  // Copy buttons
+  document.querySelectorAll<HTMLButtonElement>('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const text = btn.dataset.copy ?? '';
+      await navigator.clipboard.writeText(text);
+
+      const copyIcon = btn.querySelector('.icon-copy');
+      const checkIcon = btn.querySelector('.icon-check');
+      const label = btn.querySelector('.copy-label');
+
+      copyIcon?.classList.add('hidden');
+      checkIcon?.classList.remove('hidden');
+      if (label) label.textContent = 'Copied';
+
+      setTimeout(() => {
+        copyIcon?.classList.remove('hidden');
+        checkIcon?.classList.add('hidden');
+        if (label) label.textContent = 'Copy';
+      }, 2000);
+    });
+  });
+
+  // Animated agent text
+  const AGENTS = ['windsurf', 'claude-code', 'cursor', 'vscode', 'opencode', 'gemini'];
+  const el = document.getElementById('agent-text');
+
+  if (el) {
+    let text = '';
+    let isDeleting = false;
+    let loopNum = 0;
+    let typingSpeed = 150;
+
+    function tick() {
+      const i = loopNum % AGENTS.length;
+      const fullText = AGENTS[i];
+
+      text = isDeleting
+        ? fullText.substring(0, text.length - 1)
+        : fullText.substring(0, text.length + 1);
+
+      el.textContent = text;
+      typingSpeed = isDeleting ? 30 : 80;
+
+      if (!isDeleting && text === fullText) {
+        setTimeout(() => { isDeleting = true; setTimeout(tick, typingSpeed); }, 2000);
+        return;
+      } else if (isDeleting && text === '') {
+        isDeleting = false;
+        loopNum++;
+        typingSpeed = 400;
+      }
+
+      setTimeout(tick, typingSpeed);
+    }
+
+    tick();
+  }
+</script>

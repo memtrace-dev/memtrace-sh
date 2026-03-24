@@ -1,0 +1,21 @@
+---
+interface Props {
+  title?: string;
+  class?: string;
+}
+const { title, class: className = '' } = Astro.props;
+---
+<div class={`bg-surface border border-border-color rounded-xl overflow-hidden shadow-xl shadow-black/5 relative flex flex-col ${className}`}>
+  <div class="absolute inset-0 pointer-events-none rounded-xl shadow-[inset_0_1px_0_0_var(--color-shadow-inner)]"></div>
+  <div class="flex items-center px-4 py-3 border-b border-border-color bg-surface/80 shrink-0">
+    <div class="flex space-x-2">
+      <div class="w-3 h-3 rounded-full bg-[#ff5f56]"></div>
+      <div class="w-3 h-3 rounded-full bg-[#ffbd2e]"></div>
+      <div class="w-3 h-3 rounded-full bg-[#27c93f]"></div>
+    </div>
+    {title && <div class="ml-4 text-xs font-mono text-muted">{title}</div>}
+  </div>
+  <div class="p-4 overflow-x-auto text-sm font-mono leading-relaxed flex-1">
+    <slot />
+  </div>
+</div>

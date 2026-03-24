@@ -1,0 +1,53 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Victor+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-background: var(--bg);
+  --color-surface: var(--surface);
+  --color-border-color: var(--border);
+  --color-primary: var(--primary);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-dim: var(--accent-dim);
+  --color-error: var(--error);
+  --color-shadow-inner: var(--shadow-inner);
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Victor Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+:root {
+  --bg: #ffffff;
+  --surface: #f9fafb;
+  --border: #e5e7eb;
+  --primary: #111827;
+  --muted: #6b7280;
+  --accent: #059669;
+  --accent-dim: #d1fae5;
+  --error: #ef4444;
+  --shadow-inner: rgba(255,255,255,0.8);
+}
+
+.dark {
+  --bg: #0d0d0d;
+  --surface: #141414;
+  --border: #222222;
+  --primary: #e8e8e8;
+  --muted: #666666;
+  --accent: #4ade80;
+  --accent-dim: #166534;
+  --error: #f87171;
+  --shadow-inner: rgba(255,255,255,0.05);
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background-color: var(--color-accent-dim);
+  color: var(--color-primary);
+}
