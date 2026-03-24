@@ -48,11 +48,11 @@ const downloads = [
       <section class="pt-32 pb-24 md:pt-48 md:pb-32 px-6 max-w-7xl mx-auto">
         <div class="max-w-3xl">
           <h1 class="text-4xl md:text-6xl font-semibold tracking-tight leading-[1.1] mb-6">
-            Your AI coding agent forgets everything.<br />
-            <span class="text-muted">memtrace doesn't.</span>
+            Your AI coding agent forgets everything —<br />
+            <span class="text-accent">memtrace</span><span class="text-muted"> doesn't.</span>
           </h1>
           <p class="text-lg md:text-xl text-muted mb-10 max-w-2xl leading-relaxed">
-            Persistent, searchable memory for Claude Code, Cursor, Windsurf, and any MCP agent — local, instant, zero-config.
+            Persistent, searchable memory for Claude Code, Cursor, Windsurf, and more — local, instant, zero-config. Your data never leaves your machine.
           </p>
 
           <div class="mb-10">
@@ -159,7 +159,23 @@ const downloads = [
       <section class="py-24 px-6 max-w-7xl mx-auto border-t border-border-color">
         <h2 class="text-xs font-semibold tracking-[0.2em] text-muted uppercase mb-8">Why memtrace</h2>
 
+        <p class="text-lg text-muted max-w-3xl leading-relaxed mb-12">
+          Most alternatives are cloud-based, tied to a single editor, or built for everything — which means they're not really built for coding.
+          <span class="text-accent">memtrace</span> is local-first, cross-agent, and code-aware. Your agent's memory works the same in Claude Code, Cursor, and Windsurf — because it's not owned by any of them.
+        </p>
+
         <div class="grid md:grid-cols-2 gap-6">
+          <div class="bg-surface border border-border-color rounded-xl p-8 relative overflow-hidden">
+            <div class="absolute inset-0 pointer-events-none rounded-xl shadow-[inset_0_1px_0_0_var(--color-shadow-inner)]"></div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-accent mb-6">
+              <rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/>
+            </svg>
+            <h3 class="text-xl font-medium mb-3">Cross-agent memory</h3>
+            <p class="text-muted leading-relaxed">
+              Built-in memory in Claude Code, Cursor, and Copilot only works in that tool. memtrace is neutral — save a decision in one agent, recall it in any other. One memory layer across every tool you use.
+            </p>
+          </div>
+
           <div class="bg-surface border border-border-color rounded-xl p-8 relative overflow-hidden">
             <div class="absolute inset-0 pointer-events-none rounded-xl shadow-[inset_0_1px_0_0_var(--color-shadow-inner)]"></div>
             <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-accent mb-6">
@@ -201,6 +217,17 @@ const downloads = [
             <h3 class="text-xl font-medium mb-3">Private by design</h3>
             <p class="text-muted leading-relaxed">
               Data lives in <code class="font-mono text-primary bg-background px-1.5 py-0.5 rounded text-sm border border-border-color">.memtrace/memtrace.db</code> inside your project. No account. No telemetry. Wrap sensitive values in <code class="font-mono text-primary bg-background px-1.5 py-0.5 rounded text-sm border border-border-color">&lt;private&gt;...&lt;/private&gt;</code> — stripped before storage. The database never sees them.
+            </p>
+          </div>
+
+          <div class="bg-surface border border-border-color rounded-xl p-8 relative overflow-hidden">
+            <div class="absolute inset-0 pointer-events-none rounded-xl shadow-[inset_0_1px_0_0_var(--color-shadow-inner)]"></div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-accent mb-6">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            <h3 class="text-xl font-medium mb-3">Built for teams <span class="text-xs font-normal text-muted ml-2 border border-border-color rounded-full px-2 py-0.5">coming soon</span></h3>
+            <p class="text-muted leading-relaxed">
+              Individual developers get the full tool, free forever. A team tier is coming with shared memory spaces, review queues, and access control — so institutional knowledge compounds instead of living in one person's head.
             </p>
           </div>
         </div>
@@ -269,9 +296,9 @@ const downloads = [
 
           <div class="flex flex-col md:flex-row items-center justify-between gap-12">
             <div class="max-w-xl w-full">
-              <h3 class="text-4xl font-semibold mb-4">$0 <span class="text-muted font-normal text-2xl">/ forever</span></h3>
+              <h3 class="text-4xl font-semibold mb-4">$0 <span class="text-muted font-normal text-2xl">/ forever for individuals</span></h3>
               <p class="text-lg text-muted mb-8 leading-relaxed">
-                memtrace is open source and runs entirely on your machine. Your code and your memories never leave your laptop.
+                memtrace is open source and runs entirely on your machine. Individual developers never hit a paywall — the full tool, always free. A team tier with shared memory and access control is coming.
               </p>
               <div class="flex flex-wrap gap-3">
                 {[['Local only'], ['Open source'], ['Unlimited memories']].map(([label]) => (
