@@ -1,46 +1,50 @@
-# Astro Starter Kit: Basics
+# memtrace.sh
+
+Marketing site for [memtrace](https://github.com/memtrace-dev/memtrace) — persistent, searchable memory for AI coding agents.
+
+**Live:** [memtrace.sh](https://memtrace.sh)
+
+## Stack
+
+- [Astro 6](https://astro.build) — static site generator
+- [Tailwind CSS v4](https://tailwindcss.com) — styling via `@tailwindcss/vite`
+- Vanilla JS — theme toggle, copy buttons, typewriter animation
+- GitHub Releases API — latest release version fetched at build time
+
+## Development
 
 ```sh
-npm create astro@latest -- --template basics
+npm install
+npm run dev       # http://localhost:4321
+npm run build     # output to ./dist
+npm run preview   # preview the build locally
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+Requires Node ≥ 22.12.0.
 
-## 🚀 Project Structure
+## Structure
 
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
-/
-├── public/
-│   └── favicon.svg
-├── src
-│   ├── assets
-│   │   └── astro.svg
-│   ├── components
-│   │   └── Welcome.astro
-│   ├── layouts
-│   │   └── Layout.astro
-│   └── pages
-│       └── index.astro
-└── package.json
+```
+src/
+├── components/
+│   ├── Nav.astro            # Navigation + theme toggle
+│   ├── HeroTerminal.astro   # Install command with copy button
+│   ├── TerminalWindow.astro # Reusable terminal shell
+│   └── CodeBlock.astro      # Code snippet with copy button
+├── layouts/
+│   └── Layout.astro         # Base layout, SEO meta, JSON-LD
+├── pages/
+│   └── index.astro          # Landing page
+└── styles/
+    └── global.css           # Tailwind + design tokens (light/dark)
 ```
 
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
+## Dynamic release links
 
-## 🧞 Commands
+Download links in the install section are fetched from the GitHub Releases API at build time — no manual updates needed when a new version ships, just redeploy.
 
-All commands are run from the root of the project, from a terminal:
+## Deployment
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+Any static host works (Netlify, Vercel, Cloudflare Pages). Build output is in `./dist`.
 
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+Set up automatic deploys from `main` so release links stay current whenever a new GitHub release triggers a redeploy.
