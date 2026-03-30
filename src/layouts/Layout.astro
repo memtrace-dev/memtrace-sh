@@ -9,14 +9,15 @@ interface Props {
   canonicalUrl?: string;
 }
 
+const siteUrl = 'https://memtrace.sh';
+
 const {
   title = 'memtrace — persistent memory for AI coding agents',
   description = 'Persistent, searchable memory for Claude Code, Cursor, Windsurf, and any MCP agent — local, instant, zero-config.',
-  image = '/logo.svg',
-  canonicalUrl = Astro.url.href,
+  image = '/og-image.png',
+  canonicalUrl = new URL(Astro.url.pathname, siteUrl).toString(),
 } = Astro.props;
 
-const siteUrl = 'https://memtrace.sh';
 const ogImage = new URL(image, siteUrl).toString();
 ---
 <!doctype html>
