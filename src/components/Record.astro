@@ -1,0 +1,66 @@
+---
+import Terminal from './Terminal.astro';
+---
+
+<section
+  data-strata="violated"
+  data-strata-region="0.74,1.02"
+  class="relative mx-auto max-w-[1500px] px-5 py-24 sm:px-8 lg:py-36"
+>
+  <p data-reveal class="section-index mb-7 flex items-center gap-3">
+    <span class="block h-px w-8 bg-accent"></span>03 &mdash; The record
+  </p>
+  <h2 data-reveal class="display display-section max-w-[16ch]">
+    Then it records<br />what happened next.
+  </h2>
+
+  <div class="mt-16 grid max-w-[76ch] grid-cols-1 gap-14">
+    <div>
+      <ol class="flex flex-col">
+        {
+          [
+            ['packed', 'A decision enters an agent session.'],
+            ['matched', 'A commit lands touching its scope.'],
+            ['verdict', 'Conform, or violate.'],
+            ['undone', 'A later commit reverts the violation.'],
+          ].map(([label, text]) => (
+            <li data-reveal class="flex items-baseline gap-6 border-t border-line py-5 last:border-b">
+              <span class="w-24 shrink-0 font-mono text-sm text-accent-text">{label}</span>
+              <span class="text-muted">{text}</span>
+            </li>
+          ))
+        }
+      </ol>
+
+      <p data-reveal class="mt-10 max-w-[48ch] leading-relaxed text-muted">
+        Every link is an append-only event, and every figure in the report drills back down to the
+        rows behind it. A number that cannot be traced is not printed.
+      </p>
+    </div>
+
+    <div class="flex flex-col gap-8">
+      <div data-reveal>
+        <Terminal title="varve report" class="bg-bg">
+          <pre class="whitespace-pre text-muted">coverage      3 of 5 agent sessions (60%) produced an
+              attributable decision to diff event
+              via pack: 3 · via recall: 0
+follow-through  4 of 5 attributed changes conformed
+observer      16 of 16 default-branch commits observed
+
+  ID           packed  matched  conform  violate
+  <span class="text-accent-text">01J9WKQ2M4</span>        7        4        3        0
+  <span class="text-accent-text">01J8QF7RTB</span>        5        2        1        1</pre>
+        </Terminal>
+      </div>
+
+      <div data-reveal class="border-t border-line pt-8">
+        <h3 class="font-mono text-sm text-text">what varve does not claim</h3>
+        <p class="mt-4 max-w-[48ch] leading-relaxed text-muted">
+          Attribution is a traceable record, not a causal one. Conform means no violation signal was
+          detected, not that compliance was verified. The report prints its own limits, every time,
+          on the report.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>

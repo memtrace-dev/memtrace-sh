@@ -1,0 +1,75 @@
+---
+const agents = [
+  { slug: 'claude', name: 'Claude Code' },
+  { slug: 'cursor', name: 'Cursor' },
+  { slug: 'windsurf', name: 'Windsurf' },
+  { slug: 'opencode', name: 'OpenCode' },
+  { slug: 'googlegemini', name: 'Gemini CLI' },
+];
+
+const tools = [
+  ['memory_pack', 'what binds these files, ranked, inside a budget'],
+  ['memory_recall', 'search by natural language, mid-task'],
+  ['memory_context', 'what is linked to these files'],
+  ['memory_save', 'save a decision, convention or note'],
+  ['memory_get', 'full content of one memory by id'],
+  ['memory_update', 'patch a note, never a decision'],
+  ['memory_forget', 'deletes a note, files a request for a decision'],
+  ['memory_prompt', 'capture the goal at session start'],
+];
+---
+
+<section
+  data-strata="note"
+  data-strata-region="0.72,1.02"
+  class="relative mx-auto max-w-[1500px] px-5 py-24 sm:px-8 lg:py-36"
+>
+  <div
+    class="grid max-w-[68rem] grid-cols-1 gap-14 lg:grid-cols-[minmax(0,19rem)_minmax(0,1fr)] lg:gap-20"
+  >
+    <div class="lg:sticky lg:top-28 lg:self-start">
+      <p data-reveal class="section-index mb-7 flex items-center gap-3">
+        <span class="block h-px w-8 bg-accent"></span>04 &mdash; The surface
+      </p>
+      <h2 data-reveal class="display display-section">Eight tools,<br />one command.</h2>
+      <p data-reveal class="mt-7 max-w-[38ch] leading-relaxed text-muted">
+        <code class="font-mono text-[0.9em] text-text">varve setup</code> writes the MCP entry and the
+        instruction block your agent reads. Governance stays off this surface entirely.
+      </p>
+
+      <ul data-reveal class="mt-10 flex flex-wrap items-center gap-x-8 gap-y-5">
+        {
+          agents.map((a) => (
+            <li>
+              <img
+                src={`/logos/${a.slug}.svg`}
+                alt={a.name}
+                width="24"
+                height="24"
+                loading="lazy"
+                decoding="async"
+                class="h-6 w-6 opacity-40 grayscale transition-all duration-500 hover:opacity-90 hover:grayscale-0 dark:invert"
+              />
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+
+    <ul class="flex flex-col">
+      {
+        tools.map(([name, desc]) => (
+          <li
+            data-reveal
+            class="group flex flex-col gap-1.5 border-t border-line py-5 transition-colors duration-500 hover:border-accent/60 sm:flex-row sm:items-baseline sm:gap-8 last:border-b"
+          >
+            <span class="w-[12rem] shrink-0 font-mono text-sm text-text transition-colors duration-500 group-hover:text-accent-text">
+              {name}
+            </span>
+            <span class="text-muted">{desc}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>

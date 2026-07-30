@@ -1,0 +1,136 @@
+---
+// The record. One canvas, fixed behind the whole page, driven by scroll
+// position and pointer. Sections declare which tone they are about with
+// data-strata="binding|proposed|violated|ghost|note|all".
+---
+
+{/* z-0, not a negative index: a fixed element behind the root background is
+    a fixed element nobody can see. Page content sits at z-10. */}
+<div class="pointer-events-none fixed inset-0 z-0" aria-hidden="true">
+  <canvas data-strata-canvas class="h-full w-full"></canvas>
+
+</div>
+
+<script>
+  import { Strata, type Tone } from '../scripts/strata';
+
+  const canvas = document.querySelector<HTMLCanvasElement>('[data-strata-canvas]');
+  if (canvas) {
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+    let strata: Strata | null = null;
+
+    const mount = () => {
+      strata?.destroy();
+      strata = new Strata({ canvas, reduced: reduced.matches });
+      strata.resize();
+      strata.start();
+    };
+
+    mount();
+
+    // Scroll position feeds deposition. Read through rAF rather than a scroll
+    // listener so it stays off the event path.
+    let ticking = false;
+    let tone: Tone | 'all' = 'all';
+    const readScroll = () => {
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      strata?.setProgress(max > 0 ? window.scrollY / max : 0);
+      // Publish the record's own coordinate so the gauge in the margin and
+      // the sediment on the right never disagree about where you are.
+      if (strata) {
+        document.dispatchEvent(
+          new CustomEvent('strata:read', {
+            detail: { depth: strata.depthAtViewportTop(), extent: strata.extent, tone },
+          }),
+        );
+      }
+      ticking = false;
+    };
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(readScroll);
+    };
+    document.addEventListener('scroll', onScroll, { passive: true });
+    readScroll();
+
+    const onResize = () => strata?.resize();
+    window.addEventListener('resize', onResize);
+
+    // Pointer parts the column. Fine pointers only: on touch there is no
+    // hover, and a phantom parting under the thumb reads as a glitch.
+    const fine = matchMedia('(hover: hover) and (pointer: fine)');
+    const onMove = (e: PointerEvent) => strata?.setPointer(e.clientX, e.clientY);
+    const onLeave = () => strata?.clearPointer();
+    if (fine.matches && !reduced.matches) {
+      window.addEventListener('pointermove', onMove, { passive: true });
+      document.addEventListener('pointerleave', onLeave);
+    }
+
+    // On a phone there is no second column to give the record: text runs the
+    // full width, so a column at 58% sits underneath the copy. Narrow screens
+    // get a seam at the edge instead, and keep the same language.
+    const wide = matchMedia('(min-width: 1024px)');
+    let requested: [number, number] = [0.58, 1.02];
+
+    const applyRegion = (x0: number, x1: number) => {
+      requested = [x0, x1];
+      // Published so the reading line knows where the column actually starts
+      // and can firm up only when it is over the record.
+      document.documentElement.dataset.strataX0 = String(wide.matches ? x0 : 0.96);
+      if (wide.matches) {
+        strata?.setRegion(x0, x1);
+        return;
+      }
+      // A left-edge seam is already out of the way; anything else is pinned
+      // to the right edge.
+      if (x1 <= 0.2) strata?.setRegion(x0, Math.min(x1, 0.06));
+      else strata?.setRegion(0.96, 1.05);
+    };
+
+    applyRegion(0.58, 1.02);
+    wide.addEventListener('change', () => applyRegion(requested[0], requested[1]));
+
+    // Each section tells the record which tone it is talking about.
+    const sections = document.querySelectorAll<HTMLElement>('[data-strata]');
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          const el = entry.target as HTMLElement;
+          tone = (el.getAttribute('data-strata') as Tone | 'all') ?? 'all';
+          strata?.setFocus(tone);
+          readScroll();
+          // A section can widen the column when the record itself is the
+          // subject, and narrow it back when the copy needs the room.
+          const region = el.dataset.strataRegion;
+          const [x0, x1] = region ? region.split(',').map(Number) : [0.58, 1.02];
+          applyRegion(x0, x1);
+        }
+      },
+      { rootMargin: '-20% 0px -55% 0px' },
+    );
+    sections.forEach((s) => io.observe(s));
+
+    // The pinned lifecycle pan drives focus directly: while it is pinned the
+    // section never re-enters the observer, but the state under the reader
+    // keeps changing.
+    window.addEventListener('strata:focus', (e) => {
+      tone = (e as CustomEvent<Tone>).detail;
+      strata?.setFocus(tone);
+      readScroll();
+    });
+
+    // Stop drawing when the tab is hidden. No reason to burn a GPU in a
+    // background tab.
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) strata?.stop();
+      else strata?.start();
+    });
+
+    // The mask is painted in the page background colour, so a theme flip has
+    // to tell the canvas about it.
+    window.addEventListener('theme:change', () => strata?.readBackground());
+    reduced.addEventListener('change', mount);
+  }
+</script>

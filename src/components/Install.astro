@@ -1,0 +1,139 @@
+---
+import Terminal from './Terminal.astro';
+
+const repo = 'https://github.com/varve-sh/varve';
+
+// Release metadata is read once at build time. If GitHub is unreachable or
+// rate-limits the build, the page still ships with links that resolve to the
+// latest release rather than to a version that does not exist.
+type Release = { tag_name?: string; html_url?: string };
+const release: Release | null = await fetch(
+  'https://api.github.com/repos/varve-sh/varve/releases/latest',
+  { headers: { Accept: 'application/vnd.github+json' } },
+)
+  .then((r) => (r.ok ? (r.json() as Promise<Release>) : null))
+  .catch(() => null);
+
+const version = release?.tag_name ?? 'latest';
+const releaseUrl = release?.html_url ?? `${repo}/releases/latest`;
+const bare = version.replace(/^v/, '');
+
+const downloads = release?.tag_name
+  ? [
+      ['macOS, Apple silicon', `${repo}/releases/download/${version}/varve_${bare}_darwin_arm64.tar.gz`],
+      ['macOS, Intel', `${repo}/releases/download/${version}/varve_${bare}_darwin_amd64.tar.gz`],
+      ['Linux, amd64', `${repo}/releases/download/${version}/varve_${bare}_linux_amd64.tar.gz`],
+      ['Linux, arm64', `${repo}/releases/download/${version}/varve_${bare}_linux_arm64.tar.gz`],
+      ['Windows', `${repo}/releases/download/${version}/varve_${bare}_windows_amd64.zip`],
+    ]
+  : [];
+
+const brew = 'brew trust varve-sh/tap\nbrew install varve-sh/tap/varve';
+const go = 'go install github.com/varve-sh/varve/cmd/varve@latest';
+const quickstart = 'varve init\nvarve setup\nvarve decision pending';
+---
+
+<section
+  id="install"
+  data-strata="all"
+  data-strata-region="0.86,1.04"
+  class="relative scroll-mt-24 border-t border-line"
+>
+  <div class="mx-auto max-w-[1400px] px-5 py-16 sm:px-8 lg:py-24">
+    <div class="grid grid-cols-1 gap-12 lg:grid-cols-[1fr_1fr] lg:gap-16">
+      <div>
+        <p data-reveal class="section-index mb-7 flex items-center gap-3">
+          <span class="block h-px w-8 bg-accent"></span>05 &mdash; Install
+        </p>
+        <h2 data-reveal class="display display-section max-w-[13ch]">
+          Running in about a minute.
+        </h2>
+        <p data-reveal class="mt-6 max-w-[44ch] leading-relaxed text-muted sm:text-lg">
+          One binary. No daemon, no container, no account. Your store is a SQLite file in the
+          repository you are working in.
+        </p>
+
+        <div data-reveal class="mt-10 space-y-4">
+          <Terminal title="homebrew" copy={brew}>
+            <div><span class="text-accent-text select-none">$</span> brew trust varve-sh/tap</div>
+            <div><span class="text-accent-text select-none">$</span> brew install varve-sh/tap/varve</div>
+          </Terminal>
+          <p class="max-w-[52ch] text-sm leading-relaxed text-muted">
+            Homebrew 6 refuses any third-party tap until you trust it, so the first line is not
+            optional. That is Homebrew policy, not something specific to this tap.
+          </p>
+
+          <Terminal title="go" copy={go}>
+            <div class="whitespace-nowrap">
+              <span class="text-accent-text select-none">$</span>
+              {go}
+            </div>
+          </Terminal>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-8">
+        <div data-reveal>
+          <Terminal title="then" copy={quickstart}>
+            <div><span class="text-accent-text select-none">$</span> varve init</div>
+            <div class="pl-4 text-muted">creates .varve/varve.db, installs the commit hook</div>
+            <div class="mt-3"><span class="text-accent-text select-none">$</span> varve setup</div>
+            <div class="pl-4 text-muted">
+              detects claude-code, cursor, vscode, opencode, windsurf, gemini
+            </div>
+            <div class="mt-3"><span class="text-accent-text select-none">$</span> varve decision pending</div>
+            <div class="pl-4 text-muted">review what your agents proposed, then accept</div>
+          </Terminal>
+        </div>
+
+        {/* Opaque: this card sits over the column, and a download list you
+            read through sediment is a download list nobody clicks. */}
+        <div data-reveal class="rounded-2xl border border-line bg-bg p-7 sm:p-9">
+          <div class="flex items-baseline justify-between gap-4">
+            <h3 class="text-lg font-semibold tracking-tight">Prebuilt binaries</h3>
+            <a
+              href={releaseUrl}
+              rel="noopener"
+              class="font-mono text-xs text-accent-text transition-opacity hover:opacity-70"
+            >
+              {version}
+            </a>
+          </div>
+
+          {
+            downloads.length > 0 ? (
+              <ul class="mt-5 grid grid-cols-1 gap-x-8 sm:grid-cols-2">
+                {downloads.map(([label, url]) => (
+                  <li>
+                    <a
+                      href={url}
+                      class="group flex items-center justify-between gap-3 border-b border-line/60 py-3 text-sm text-muted transition-colors hover:text-accent-text"
+                    >
+                      {label}
+                      <i
+                        class="ph ph-arrow-right text-base transition-transform duration-300 group-hover:translate-x-1"
+                        aria-hidden="true"
+                      />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p class="mt-5 text-sm leading-relaxed text-muted">
+                Release metadata was not available when this page was built.
+                <a
+                  href={releaseUrl}
+                  rel="noopener"
+                  class="ml-1 text-accent-text underline underline-offset-4"
+                >
+                  Browse the latest release
+                </a>
+                for every platform.
+              </p>
+            )
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,84 @@
+---
+interface Props {
+  title?: string;
+  copy?: string;
+  class?: string;
+  tone?: 'surface' | 'ink';
+}
+const { title, copy, class: className = '', tone = 'surface' } = Astro.props;
+
+const shell =
+  tone === 'ink'
+    ? 'border-white/10 bg-[#0c0c0c] text-[#f6f4ee]'
+    : 'border-line bg-surface text-text';
+---
+
+<div class={`overflow-hidden rounded-xl border ${shell} ${className}`}>
+  <div class="flex items-center justify-between gap-4 border-b border-inherit px-4 py-2.5">
+    <span class="font-mono text-[11px] tracking-wide text-muted">{title ?? 'shell'}</span>
+    {
+      copy && (
+        <button
+          type="button"
+          class="copy-btn group/c flex items-center gap-1.5 rounded-md px-2 py-1 font-mono text-[11px] text-muted transition-colors hover:text-accent-text"
+          data-copy={copy}
+          aria-label="Copy to clipboard"
+        >
+          <i class="ph ph-copy icon-copy text-sm" aria-hidden="true" />
+          <i class="ph ph-check icon-check hidden text-sm" aria-hidden="true" />
+          <span class="copy-label">Copy</span>
+        </button>
+      )
+    }
+  </div>
+  <div class="overflow-x-auto px-4 py-4 font-mono text-[12.5px] leading-[1.75] sm:text-[13px]">
+    <slot />
+  </div>
+</div>
+
+<script>
+  // One delegated listener for every copy button on the page.
+  document.addEventListener('click', async (e) => {
+    const btn = (e.target as HTMLElement)?.closest<HTMLElement>('.copy-btn');
+    if (!btn) return;
+
+    const text = btn.dataset.copy ?? '';
+    const label = btn.querySelector('.copy-label');
+    const copyIcon = btn.querySelector('.icon-copy');
+    const checkIcon = btn.querySelector('.icon-check');
+
+    const show = (msg: string, ok: boolean) => {
+      if (label) label.textContent = msg;
+      copyIcon?.classList.toggle('hidden', ok);
+      checkIcon?.classList.toggle('hidden', !ok);
+      setTimeout(() => {
+        if (label) label.textContent = 'Copy';
+        copyIcon?.classList.remove('hidden');
+        checkIcon?.classList.add('hidden');
+      }, 2000);
+    };
+
+    try {
+      // clipboard.writeText needs a secure context. Fall back rather than
+      // failing silently, because a copy button that does nothing is worse
+      // than one that tells you to copy by hand.
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        show('Copied', true);
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        const ok = document.execCommand('copy');
+        ta.remove();
+        show(ok ? 'Copied' : 'Copy failed', ok);
+      }
+    } catch {
+      show('Copy failed', false);
+    }
+  });
+</script>

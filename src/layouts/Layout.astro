@@ -1,6 +1,12 @@
 ---
 import '../styles/global.css';
-import Analytics from '@vercel/analytics/astro'
+import Analytics from '@vercel/analytics/astro';
+
+// The hero headline is the LCP element, and it is set in Archivo. Preloading
+// the latin subset means the display face is there for first paint instead of
+// swapping in a beat late. Imported rather than hardcoded so the hashed build
+// filename can never drift out of sync with the link.
+import archivoLatin from '@fontsource-variable/archivo/files/archivo-latin-wdth-normal.woff2?url';
 
 interface Props {
   title?: string;
@@ -9,35 +15,31 @@ interface Props {
   canonicalUrl?: string;
 }
 
-const siteUrl = 'https://memtrace.sh';
-
+const siteUrl = 'https://varve.sh';
 const {
-  title = 'memtrace — persistent memory for AI coding agents',
-  description = 'Persistent, searchable memory for Claude Code, Cursor, Windsurf, and any MCP agent — local, instant, zero-config.',
-  image = '/og-logo.png',
-  canonicalUrl = new URL(Astro.url.pathname, siteUrl).toString(),
+  title = 'varve - decision memory for AI coding agents',
+  description =
+    'Local-first decision memory for Claude Code, Cursor, Windsurf and any MCP agent. Decisions carry scope, evidence and a lifecycle, and nothing an agent proposes binds until a human accepts it.',
+  image = '/og.png',
+  canonicalUrl = siteUrl,
 } = Astro.props;
 
-const ogImage = new URL(image, siteUrl).toString();
+const ogImage = new URL(image, siteUrl).href;
 ---
+
 <!doctype html>
-<html lang="en">
+<html lang="en" class="no-js">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="generator" content={Astro.generator} />
-
-    <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
-
-    <!-- Primary -->
     <title>{title}</title>
     <meta name="description" content={description} />
-    <meta name="keywords" content="AI agent memory, Claude Code, Cursor, Windsurf, MCP, persistent memory, developer tools, coding assistant" />
     <meta name="author" content="Sebastian Puchet" />
     <link rel="canonical" href={canonicalUrl} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preload" as="font" type="font/woff2" href={archivoLatin} crossorigin />
+    <link rel="sitemap" href="/sitemap-index.xml" />
 
-    <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonicalUrl} />
     <meta property="og:title" content={title} />
@@ -45,52 +47,240 @@ const ogImage = new URL(image, siteUrl).toString();
     <meta property="og:image" content={ogImage} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:site_name" content="memtrace" />
+    <meta property="og:site_name" content="varve" />
     <meta property="og:locale" content="en_US" />
 
-    <!-- Twitter / X -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
 
-    <!-- JSON-LD -->
-    <script type="application/ld+json" set:html={JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "SoftwareApplication",
-      "name": "memtrace",
-      "url": siteUrl,
-      "description": description,
-      "applicationCategory": "DeveloperApplication",
-      "operatingSystem": "macOS, Linux, Windows",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "author": {
-        "@type": "Person",
-        "name": "Sebastian Puchet",
-        "url": "https://github.com/SebastianPuchet"
-      },
-      "codeRepository": "https://github.com/memtrace-dev/memtrace",
-      "license": "https://opensource.org/licenses/MIT",
-      "keywords": "AI agent, memory, MCP, Claude Code, Cursor, Windsurf"
-    })} />
+    <meta name="theme-color" content="#111111" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f6f4ee" media="(prefers-color-scheme: light)" />
 
-    <Analytics />
-    <!-- Theme init (before paint to avoid flash) -->
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'SoftwareApplication',
+        name: 'varve',
+        applicationCategory: 'DeveloperApplication',
+        operatingSystem: 'macOS, Linux, Windows',
+        description,
+        url: siteUrl,
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+        author: {
+          '@type': 'Person',
+          name: 'Sebastian Puchet',
+          url: 'https://github.com/SebastianPuchet',
+        },
+        codeRepository: 'https://github.com/varve-sh/varve',
+        license: 'https://www.apache.org/licenses/LICENSE-2.0',
+      })}
+    />
+
+    {/* Theme + no-js flag resolved before first paint, so there is no flash. */}
     <script is:inline>
-      (function () {
-        const saved = localStorage.getItem('theme');
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        if (saved === 'dark' || (!saved && prefersDark)) {
-          document.documentElement.classList.add('dark');
-        }
+      (() => {
+        const root = document.documentElement;
+        root.classList.remove('no-js');
+        const stored = localStorage.getItem('theme');
+        const dark = stored ? stored === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+        root.classList.toggle('dark', dark);
       })();
     </script>
+
+    <Analytics />
   </head>
+
   <body>
     <slot />
+    <div class="reading-line" aria-hidden="true"><i></i></div>
+    <div class="grain" aria-hidden="true"></div>
+
+    <script>
+      import gsap from 'gsap';
+      import ScrollTrigger from 'gsap/ScrollTrigger';
+      import Lenis from 'lenis';
+
+      gsap.registerPlugin(ScrollTrigger);
+
+      const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+
+      function start() {
+        if (reduced.matches) {
+          // Everything is already in its resting state via CSS. Reveal the
+          // masked display lines so nothing stays hidden.
+          document
+            .querySelectorAll<HTMLElement>('.line-mask > span')
+            .forEach((el) => (el.style.transform = 'none'));
+          return () => {};
+        }
+
+        const lenis = new Lenis({ duration: 1.05, smoothWheel: true });
+        lenis.on('scroll', ScrollTrigger.update);
+        const raf = (time: number) => lenis.raf(time * 1000);
+        gsap.ticker.add(raf);
+        gsap.ticker.lagSmoothing(0);
+
+        const ctx = gsap.context(() => {
+          // Load choreography, in order of what the page needs you to read:
+          // the label, then the statement, then the supporting cluster, then
+          // the instrument in the margin. Runs once, on load only.
+          gsap.from('[data-hero-lead]', {
+            opacity: 0,
+            y: 10,
+            duration: 0.8,
+            ease: 'expo.out',
+            delay: 0.1,
+          });
+
+          // Hero display lines rise out of their masks, in sequence.
+          gsap.to('.line-mask > span', {
+            y: '0%',
+            duration: 1.2,
+            ease: 'expo.out',
+            stagger: 0.09,
+            delay: 0.28,
+          });
+
+          gsap.from('[data-hero-fade]', {
+            opacity: 0,
+            y: 18,
+            duration: 0.9,
+            ease: 'expo.out',
+            stagger: 0.09,
+            delay: 0.7,
+          });
+
+          // The gauge arrives last: it is the instrument you pick up after
+          // you have read what the page is about.
+          gsap.from('[data-gauge]', {
+            opacity: 0,
+            x: -14,
+            duration: 1,
+            ease: 'expo.out',
+            delay: 1.15,
+          });
+
+          // The logo bars accumulate like sediment settling. Once, on load.
+          gsap.from('[data-logo-bar]', {
+            scaleX: 0,
+            transformOrigin: 'left center',
+            duration: 0.7,
+            ease: 'expo.out',
+            stagger: 0.035,
+            delay: 0.2,
+          });
+
+          // Scroll reveals: batched so a grid of items enters together
+          // instead of firing one trigger per node.
+          ScrollTrigger.batch('[data-reveal]', {
+            start: 'top 88%',
+            once: true,
+            onEnter: (batch) =>
+              batch.forEach((el, i) =>
+                setTimeout(() => el.classList.add('is-revealed'), i * 70),
+              ),
+          });
+
+          // Parallax: layers drift at different rates, which is the whole
+          // metaphor of the brand. Transform only.
+          document.querySelectorAll<HTMLElement>('[data-parallax]').forEach((el) => {
+            const depth = Number(el.dataset.parallax) || 12;
+            gsap.fromTo(
+              el,
+              { yPercent: -depth },
+              {
+                yPercent: depth,
+                ease: 'none',
+                scrollTrigger: {
+                  trigger: el.closest('[data-parallax-scope]') ?? el,
+                  start: 'top bottom',
+                  end: 'bottom top',
+                  scrub: true,
+                },
+              },
+            );
+          });
+
+          // Nav condenses once the hero is behind you: feedback that you have
+          // left the top of the page.
+          const nav = document.querySelector('[data-nav]');
+          if (nav) {
+            ScrollTrigger.create({
+              start: 'top -80',
+              end: 99999,
+              onToggle: (self) => nav.classList.toggle('is-stuck', self.isActive),
+            });
+          }
+        });
+
+        // Magnetic pull on primary actions. Pointer-driven, written straight
+        // to the transform via quickTo so React-style re-render cost is nil.
+        const fine = matchMedia('(hover: hover) and (pointer: fine)');
+        const magnets: Array<() => void> = [];
+
+        // The reading line: a straightedge that accompanies the pointer. It
+        // extends and firms up once it is over the record, which is the only
+        // place a straightedge is any use.
+        const line = document.querySelector<HTMLElement>('.reading-line');
+        if (line && fine.matches) {
+          const lx = gsap.quickTo(line, 'x', { duration: 0.3, ease: 'expo.out' });
+          const ly = gsap.quickTo(line, 'y', { duration: 0.45, ease: 'expo.out' });
+          const onMove = (e: PointerEvent) => {
+            line.classList.add('is-live');
+            lx(e.clientX);
+            ly(e.clientY);
+            const x0 = parseFloat(document.documentElement.dataset.strataX0 ?? '0.58');
+            line.classList.toggle('is-reading', e.clientX > x0 * window.innerWidth);
+          };
+          const onLeave = () => line.classList.remove('is-live');
+          window.addEventListener('pointermove', onMove, { passive: true });
+          document.addEventListener('pointerleave', onLeave);
+          magnets.push(() => {
+            window.removeEventListener('pointermove', onMove);
+            document.removeEventListener('pointerleave', onLeave);
+            line.classList.remove('is-live', 'is-reading');
+          });
+        }
+
+        if (fine.matches) {
+          document.querySelectorAll<HTMLElement>('[data-magnetic]').forEach((el) => {
+            const xTo = gsap.quickTo(el, 'x', { duration: 0.5, ease: 'expo.out' });
+            const yTo = gsap.quickTo(el, 'y', { duration: 0.5, ease: 'expo.out' });
+            const move = (e: PointerEvent) => {
+              const r = el.getBoundingClientRect();
+              xTo((e.clientX - (r.left + r.width / 2)) * 0.28);
+              yTo((e.clientY - (r.top + r.height / 2)) * 0.42);
+            };
+            const reset = () => {
+              xTo(0);
+              yTo(0);
+            };
+            el.addEventListener('pointermove', move);
+            el.addEventListener('pointerleave', reset);
+            magnets.push(() => {
+              el.removeEventListener('pointermove', move);
+              el.removeEventListener('pointerleave', reset);
+            });
+          });
+        }
+
+        return () => {
+          magnets.forEach((off) => off());
+          ctx.revert();
+          gsap.ticker.remove(raf);
+          lenis.destroy();
+        };
+      }
+
+      let stop = start();
+      // If the user flips the OS motion setting mid-visit, respect it.
+      reduced.addEventListener('change', () => {
+        stop?.();
+        stop = start();
+      });
+    </script>
   </body>
 </html>

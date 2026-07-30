@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://memtrace.sh/sitemap-index.xml
+Sitemap: https://varve.sh/sitemap-index.xml

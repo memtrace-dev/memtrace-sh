@@ -1,0 +1,71 @@
+---
+import Terminal from './Terminal.astro';
+---
+
+{/* The record narrows here: the copy needs the room, so the column recedes to
+    a seam at the right edge and comes back when it is the subject again. */}
+<section
+  data-strata="binding"
+  data-strata-region="0.72,1.02"
+  class="relative mx-auto max-w-[1500px] px-5 py-24 sm:px-8 lg:py-36"
+>
+  <div class="max-w-[62ch]">
+    <p data-reveal class="section-index mb-7 flex items-center gap-3">
+      <span class="block h-px w-8 bg-accent"></span>01 &mdash; The model
+    </p>
+    <h2 data-reveal class="display display-section">Every band<br />is a memory.</h2>
+    <p data-reveal class="mt-7 leading-relaxed text-muted">
+      A varve is one year of lake sediment. Read the column and you read the record, in order,
+      without asking anyone what happened. That is the whole idea behind the tool.
+    </p>
+  </div>
+
+  <div class="mt-16 max-w-[68ch]">
+    <div data-reveal class="border-t border-line py-8">
+      <h3 class="font-mono text-sm text-accent-text">decisions and conventions</h3>
+      <p class="mt-4 text-lg leading-relaxed">
+        Governed. They declare which files they cover, carry evidence, and every transition lands in
+        an append-only log.
+      </p>
+      <p class="mt-3 leading-relaxed text-muted">
+        An agent can propose one. It cannot accept one, cannot repeal one, and cannot delete one.
+        Those are your commands, run from your terminal.
+      </p>
+    </div>
+
+    <div data-reveal class="border-t border-line py-8">
+      <h3 class="font-mono text-sm text-muted">notes</h3>
+      <p class="mt-4 text-lg leading-relaxed">
+        Ungoverned. Durable facts, session summaries, captured prompts.
+      </p>
+      <p class="mt-3 leading-relaxed text-muted">
+        Retrievable, never binding, and deleted outright when you ask. Most of what an agent learns
+        belongs here, and that is fine.
+      </p>
+    </div>
+
+    <div data-reveal class="border-t border-b border-line py-8">
+      <h3 class="font-mono text-sm text-muted">what your agent sees</h3>
+      <p class="mt-4 leading-relaxed text-muted">
+        The first call of a task returns what binds the files being touched, ranked, inside a token
+        budget. Nothing is dropped in silence.
+      </p>
+      <div class="mt-6">
+        <Terminal title="memory_pack" class="bg-bg">
+          <pre class="whitespace-pre text-muted">files: internal/auth/middleware.go
+budget: 2000 est-tokens · used: 1712 · omitted: 2
+
+<span class="text-accent-text">[1] DECISION 01J9W… · active · scope: internal/auth/**</span>
+<span class="text-text">Refresh tokens rotate on every use.</span>
+evidence: commit 4f2a91c, pr #87
+
+<span class="text-accent-text">[2] DECISION 01J8Q… · VIOLATED (2 unresolved)</span>
+<span class="text-text">Session records are never written from a handler.</span>
+
+-- proposed decisions touching these files: 2, not binding
+-- omitted (over budget): 2, named with their rank</pre>
+        </Terminal>
+      </div>
+    </div>
+  </div>
+</section>

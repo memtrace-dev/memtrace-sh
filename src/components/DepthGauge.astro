@@ -1,0 +1,143 @@
+---
+/**
+ * The gauge in the left margin.
+ *
+ * A core sample is read against a scale, so the page carries one. It prints
+ * the record's own depth coordinate, the tone currently under the reader, and
+ * a travelling index on a ticked rail. Every value comes from the same
+ * `strata:read` event the canvas deposits from, so the instrument can never
+ * drift from the sediment it is measuring.
+ *
+ * Desktop only: below lg there is no margin to put it in, and a gauge laid
+ * over body copy is an ornament, which is exactly what it is not.
+ */
+
+// The four tones a section can be about, in the record's own words. `all` is
+// the hero and the install block, where nothing in particular is emphasised.
+const readout: Record<string, string> = {
+  all: 'full column',
+  binding: 'binding',
+  proposed: 'proposed',
+  violated: 'violated',
+  ghost: 'reverted',
+  note: 'ungoverned',
+};
+---
+
+{/* The instrument gets its own ground. The record runs behind everything
+    else on the page, but a gauge you can see sediment through is not a
+    gauge. Opaque panel, hairline on the reading side. */}
+<aside
+  data-gauge
+  class="pointer-events-none fixed top-0 bottom-0 left-0 z-40 hidden w-[4.5rem] flex-col justify-center border-r border-line bg-bg pl-5 xl:w-[6.5rem] xl:pl-8 lg:flex"
+  aria-hidden="true"
+>
+  {/* Depth readout. Tabular figures so the number does not jitter as it
+      counts -- a gauge whose digits dance is not an instrument. */}
+  <div class="mb-5">
+    <div
+      data-gauge-depth
+      class="font-mono text-[15px] leading-none font-medium tracking-tight text-text tabular-nums"
+    >
+      0000
+    </div>
+    <div class="section-index mt-2 !text-[10px]">mm</div>
+  </div>
+
+  {/* The rail. Ticks are drawn in CSS, the head travels on transform only. */}
+  <div class="relative h-[34vh] w-[1.75rem]">
+    <div class="gauge-rail absolute top-0 bottom-0 left-0 w-2 opacity-80"></div>
+
+    <div
+      data-gauge-head
+      class="gauge-head absolute top-0 left-0 flex w-full items-center gap-1"
+      style="transform: translate3d(0,0,0)"
+    >
+      <span class="block h-px w-3.5 bg-accent"></span>
+      <span class="block h-1.5 w-1.5 shrink-0 rounded-full bg-accent"></span>
+    </div>
+  </div>
+
+  {/* Which tone the section under the reader is about. */}
+  <div class="mt-5 flex flex-col gap-2">
+    <span class="block h-1.5 w-7 shrink-0" data-gauge-mark></span>
+    <span data-gauge-tone class="section-index !text-[10px] !leading-tight !text-text">
+      full column
+    </span>
+  </div>
+</aside>
+
+<script define:vars={{ readout }}>
+  const gauge = document.querySelector('[data-gauge]');
+  if (gauge) {
+    const depthEl = gauge.querySelector('[data-gauge-depth]');
+    const headEl = gauge.querySelector('[data-gauge-head]');
+    const toneEl = gauge.querySelector('[data-gauge-tone]');
+    const markEl = gauge.querySelector('[data-gauge-mark]');
+    const railH = () => gauge.querySelector('.gauge-rail')?.clientHeight ?? 0;
+
+    let shown = 0;
+    let target = 0;
+    let raf = 0;
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+
+    // The digits ease toward the true depth instead of snapping to it. A real
+    // gauge has inertia; a number that teleports reads as a text label.
+    const tick = () => {
+      const d = target - shown;
+      if (Math.abs(d) < 0.5) {
+        shown = target;
+      } else {
+        shown += d * 0.16;
+        raf = requestAnimationFrame(tick);
+      }
+      if (depthEl) depthEl.textContent = String(Math.round(shown)).padStart(4, '0');
+    };
+
+    document.addEventListener('strata:read', (e) => {
+      const { depth, extent, tone } = e.detail;
+
+      target = depth;
+      if (reduced.matches) {
+        shown = target;
+        if (depthEl) depthEl.textContent = String(Math.round(shown)).padStart(4, '0');
+      } else {
+        cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(tick);
+      }
+
+      const p = extent > 0 ? Math.max(0, Math.min(1, depth / extent)) : 0;
+      if (headEl) headEl.style.transform = `translate3d(0, ${(p * railH()).toFixed(1)}px, 0)`;
+
+      const label = readout[tone] ?? tone;
+      if (toneEl && toneEl.textContent !== label) toneEl.textContent = label;
+      if (markEl) markEl.setAttribute('data-mark', tone === 'all' ? 'solid' : tone);
+    });
+  }
+</script>
+
+<style>
+  /* The mark speaks the same four languages as the canvas and the hero
+     legend. Kept local because only the gauge draws them at 8px. */
+  [data-gauge-mark] {
+    --ochre: #b86a2f;
+    --clay: #8e5530;
+    background: linear-gradient(180deg, var(--ochre), var(--clay));
+    transition: opacity 0.4s var(--ease-out-quart);
+  }
+  [data-gauge-mark][data-mark='proposed'] {
+    background: var(--color-muted);
+    opacity: 0.55;
+    height: 1px;
+  }
+  [data-gauge-mark][data-mark='violated'] {
+    background:
+      linear-gradient(180deg, var(--ochre), var(--clay)) left / 38% 100% no-repeat,
+      linear-gradient(180deg, var(--ochre), var(--clay)) right / 42% 100% no-repeat;
+  }
+  [data-gauge-mark][data-mark='ghost'],
+  [data-gauge-mark][data-mark='note'] {
+    background: var(--color-muted);
+    opacity: 0.28;
+  }
+</style>

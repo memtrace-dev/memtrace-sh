@@ -1,0 +1,52 @@
+---
+import Logo from './Logo.astro';
+const repo = 'https://github.com/varve-sh/varve';
+const year = new Date().getFullYear();
+---
+
+<footer class="relative z-10 border-t border-line bg-bg lg:pl-[4.5rem] xl:pl-[6.5rem]">
+  <div class="mx-auto max-w-[1500px] px-5 py-14 sm:px-8">
+    <div class="flex flex-col gap-10 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <div class="flex items-center gap-2.5 text-accent-text">
+          <Logo class="h-6 w-6" />
+          <span class="font-mono text-[15px] font-medium tracking-tight text-text">varve</span>
+        </div>
+        <p class="mt-4 max-w-[38ch] text-sm leading-relaxed text-muted">
+          Decision memory for AI coding agents. Local-first, MCP-native, one binary.
+        </p>
+      </div>
+
+      <nav class="flex flex-wrap gap-x-8 gap-y-3 text-sm" aria-label="Footer">
+        <a href={repo} rel="noopener" class="text-muted transition-colors hover:text-accent-text"
+          >GitHub</a
+        >
+        <a
+          href={`${repo}/tree/main/docs`}
+          rel="noopener"
+          class="text-muted transition-colors hover:text-accent-text">Docs</a
+        >
+        <a
+          href={`${repo}/releases`}
+          rel="noopener"
+          class="text-muted transition-colors hover:text-accent-text">Releases</a
+        >
+      </nav>
+    </div>
+
+    <div
+      class="mt-12 flex flex-col gap-3 border-t border-line pt-6 text-xs text-muted sm:flex-row sm:items-center sm:justify-between"
+    >
+      <p>Apache-2.0. The licence covers the source, not the varve name or logo.</p>
+      <p>
+        Built by
+        <a
+          href="https://github.com/SebastianPuchet"
+          rel="noopener"
+          class="text-accent-text transition-opacity hover:opacity-70">Sebastian Puchet</a
+        >
+        &middot; {year}
+      </p>
+    </div>
+  </div>
+</footer>

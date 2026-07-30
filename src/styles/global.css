@@ -1,53 +1,291 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Victor+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+@import "@fontsource-variable/archivo/wdth.css";
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
+@import "@phosphor-icons/web/regular";
 @import "tailwindcss";
 
+/* Tailwind v4: wire the `dark:` variant to the .dark class the theme script sets. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
-  --color-background: var(--bg);
+  --color-bg: var(--bg);
   --color-surface: var(--surface);
-  --color-border-color: var(--border);
-  --color-primary: var(--primary);
+  --color-line: var(--line);
+  --color-text: var(--text);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
-  --color-accent-dim: var(--accent-dim);
-  --color-error: var(--error);
-  --color-shadow-inner: var(--shadow-inner);
+  --color-accent-text: var(--accent-text);
+  --color-accent-ink: var(--accent-ink);
+  --color-clay: var(--clay);
 
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "Victor Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, SFMono-Regular, monospace;
+  /* Archivo carries a width axis (62-125). Set narrow and heavy it reads like
+     a survey stencil, which is the voice the record wants. */
+  --font-display: "Archivo Variable", "Archivo", var(--font-sans);
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
 }
 
+/*
+  Palette is fixed by the brand: black #111111, bone #F6F4EE, burnt ochre
+  #B86A2F (primary accent), clay #8E5530 (hover).
+
+  Contrast decisions, measured rather than guessed:
+    ink on ochre   4.62:1  -> ochre fills always take BLACK labels
+    bone on ochre  3.71:1  -> never bone on ochre
+    bone on clay   5.47:1  -> clay hover state flips the label to bone
+    clay on bone   5.47:1  -> accent TEXT in light mode is clay, not ochre
+    ochre on ink   4.62:1  -> accent text in dark mode can be ochre itself
+*/
 :root {
-  --bg: #ffffff;
-  --surface: #f9fafb;
-  --border: #e5e7eb;
-  --primary: #111827;
-  --muted: #6b7280;
-  --accent: #059669;
-  --accent-dim: #d1fae5;
-  --error: #ef4444;
-  --shadow-inner: rgba(255,255,255,0.8);
+  --bg: #f6f4ee;
+  --surface: #efeae0;
+  --line: rgb(17 17 17 / 0.12);
+  --text: #111111;
+  --muted: #6b6357;
+  --accent: #b86a2f;
+  --accent-text: #8e5530;
+  --accent-ink: #111111;
+  --clay: #8e5530;
+  --grain-opacity: 0.035;
+  color-scheme: light;
 }
 
 .dark {
-  --bg: #0d0d0d;
-  --surface: #141414;
-  --border: #222222;
-  --primary: #e8e8e8;
-  --muted: #666666;
-  --accent: #4ade80;
-  --accent-dim: #166534;
-  --error: #f87171;
-  --shadow-inner: rgba(255,255,255,0.05);
+  --bg: #111111;
+  --surface: #1a1918;
+  --line: rgb(246 244 238 / 0.14);
+  --text: #f6f4ee;
+  --muted: #a39b8e;
+  --accent: #b86a2f;
+  --accent-text: #b86a2f;
+  --accent-ink: #111111;
+  --clay: #8e5530;
+  --grain-opacity: 0.05;
+  color-scheme: dark;
+}
+
+html {
+  background-color: var(--bg);
+  scroll-behavior: smooth;
 }
 
 body {
-  background-color: var(--color-background);
-  color: var(--color-primary);
+  background-color: var(--bg);
+  color: var(--text);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+/* ---- Display type -----------------------------------------------------
+   Two sizes only: the hero, and everything else. The gap between display
+   and body is ~11:1 at desktop, which is the point -- body copy should
+   feel intimate next to type this size, not merely smaller.
+
+   font-stretch drives Archivo's width axis. It stays a real CSS property
+   rather than font-variation-settings so weight remains animatable and the
+   fallback face degrades sanely. */
+.display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-stretch: 79%;
+  text-transform: uppercase;
+  letter-spacing: -0.035em;
+  line-height: 0.82;
+  text-wrap: balance;
+}
+
+.display-hero {
+  font-size: clamp(2.6rem, 8.9vw, 8rem);
+  /* Optical: the stencil sits a hair left of the text box at this weight. */
+  margin-left: -0.012em;
+}
+
+.display-section {
+  font-size: clamp(2.15rem, 5.6vw, 5rem);
+  line-height: 0.86;
+  letter-spacing: -0.028em;
+}
+
+/* Section index in the margin -- the record is numbered, so the page is too. */
+.section-index {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
 }
 
 ::selection {
-  background-color: var(--color-accent-dim);
-  color: var(--color-primary);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* Lenis smooth scroll: it drives scrolling itself, so the native smooth
+   behaviour has to be off while it is active. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+/* ---- Reveal primitive -------------------------------------------------
+   Elements start displaced and are released by ScrollTrigger adding
+   .is-revealed. If JS never runs, the no-js rule below shows everything,
+   so content is never trapped behind a script that failed to load. */
+[data-reveal] {
+  opacity: 0;
+  transform: translate3d(0, 24px, 0);
+  transition:
+    opacity 0.9s var(--ease-out-expo),
+    transform 0.9s var(--ease-out-expo);
+  will-change: opacity, transform;
+}
+[data-reveal].is-revealed {
+  opacity: 1;
+  transform: none;
+}
+html.no-js [data-reveal] {
+  opacity: 1;
+  transform: none;
+}
+
+/* Line-by-line mask reveal for display type. */
+.line-mask {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.12em;
+}
+.line-mask > span {
+  display: block;
+  transform: translate3d(0, 110%, 0);
+}
+html.no-js .line-mask > span {
+  transform: none;
+}
+
+/* Strata rule: a hairline that reads as a sediment seam. */
+.seam {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--accent) 18%,
+    var(--accent) 82%,
+    transparent
+  );
+  opacity: 0.5;
+}
+
+/* ---- The depth gauge --------------------------------------------------
+   A fixed instrument in the left margin. It reads the same scroll value the
+   canvas deposits from, so the number in the margin and the sediment on the
+   right are always describing the same moment in the record. */
+.gauge-rail {
+  /* Ticks every 12px, a longer one every 60px: a real scale, not a bar. */
+  background-image:
+    repeating-linear-gradient(180deg, var(--line) 0 1px, transparent 1px 12px);
+}
+
+.gauge-rail::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 5px;
+  background-image:
+    repeating-linear-gradient(180deg, var(--line) 0 1px, transparent 1px 60px);
+}
+
+/* The travelling index: a bracket that sits at the current depth. */
+.gauge-head {
+  transition: transform 0.12s linear;
+  will-change: transform;
+}
+
+/* ---- Reading line -----------------------------------------------------
+   You read a core against a straightedge. The native cursor is left alone --
+   there are terminals and copy buttons on this page and hiding the pointer
+   over them costs more than the effect is worth -- so this is an instrument
+   that accompanies the pointer rather than replacing it. */
+.reading-line {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 55;
+  pointer-events: none;
+  opacity: 0;
+  will-change: transform, opacity;
+  transition: opacity 0.5s var(--ease-out-quart);
+}
+.reading-line.is-live {
+  opacity: 1;
+}
+.reading-line > i {
+  display: block;
+  height: 1px;
+  width: 72px;
+  margin-left: -36px;
+  background: linear-gradient(90deg, transparent, var(--accent) 22%, var(--accent) 78%, transparent);
+  opacity: 0.55;
+  transition:
+    width 0.5s var(--ease-out-quart),
+    opacity 0.5s var(--ease-out-quart);
+}
+/* Over the record itself the straightedge extends and firms up. */
+.reading-line.is-reading > i {
+  width: 168px;
+  margin-left: -84px;
+  opacity: 0.95;
+}
+html.no-js .reading-line {
+  display: none;
+}
+
+/* Film grain over the whole page. Fixed and pointer-events-none so it never
+   repaints with scrolling content. */
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: var(--grain-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .line-mask > span {
+    transform: none;
+  }
+  .reading-line {
+    display: none;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

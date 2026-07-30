@@ -1,0 +1,131 @@
+---
+import Terminal from './Terminal.astro';
+const install = 'brew install varve-sh/tap/varve';
+
+// The legend does double duty: it teaches the canvas's language and states
+// the product model at the same time. A visitor who reads only this knows
+// what varve is.
+const legend = [
+  { key: 'binding', mark: 'solid', text: 'accepted by a human. Binds every session.' },
+  { key: 'proposed', mark: 'hairline', text: 'saved by an agent. Binds nothing yet.' },
+  { key: 'violated', mark: 'broken', text: 'still binding. The code parts from it.' },
+  { key: 'reverted', mark: 'ghost', text: 'repealed, and kept as record.' },
+];
+---
+
+{/* The column is at its widest here, and only here. Its ragged left edge
+    lands mid-headline, so the type sits ON the core rather than beside it --
+    which is the whole claim of the page. Any wider and the bands lose their
+    edge and read as scan lines instead of sediment. */}
+<section
+  data-strata="all"
+  data-strata-region="0.3,1.02"
+  class="relative flex min-h-[100dvh] flex-col justify-between gap-10 pt-24 lg:gap-8 lg:pt-28"
+>
+  {/* Veil, in two parts.
+
+      The flat layer knocks the whole record back so display type can sit on
+      top of it and still clear WCAG -- bone on undimmed ochre is 3.71:1,
+      which the palette notes already rule out, so the bands have to recede.
+
+      The vertical layer buries the record progressively down the frame, and
+      it is timed to the headline rather than to round numbers. The two lines
+      the agent owns sit in sediment; the accepted line -- "what binds" --
+      lands on clean ground, because that is what acceptance does. Body copy
+      below it is never read against texture. */}
+  <div
+    aria-hidden="true"
+    class="pointer-events-none absolute inset-0 -z-10"
+    style="background:
+      linear-gradient(180deg, var(--bg) 0%, var(--bg) 6rem, transparent 13rem, transparent 34%, color-mix(in srgb, var(--bg) 55%, transparent) 44%, color-mix(in srgb, var(--bg) 90%, transparent) 50%, var(--bg) 56%),
+      linear-gradient(color-mix(in srgb, var(--bg) 50%, transparent), color-mix(in srgb, var(--bg) 50%, transparent))"
+  >
+  </div>
+
+  <div class="mx-auto w-full max-w-[1500px] px-5 sm:px-8">
+    <p data-hero-lead class="section-index mb-7 flex items-center gap-3 lg:mb-9">
+      <span class="block h-px w-8 bg-accent"></span>
+      Decision memory &middot; local-first &middot; MCP-native
+    </p>
+
+    <h1 class="display display-hero">
+      <span class="line-mask"><span>Agents propose.</span></span>
+      <span class="line-mask"><span>You decide</span></span>
+      <span class="line-mask"><span class="text-accent-text">what binds.</span></span>
+    </h1>
+  </div>
+
+  {/* The reading cluster sits low and left, deliberately not centred under
+      the headline: the record needs the right of the frame to breathe. */}
+  <div class="mx-auto w-full max-w-[1500px] px-5 sm:px-8">
+    <div
+      class="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,44ch)_minmax(0,26rem)] lg:items-end lg:gap-14"
+    >
+      <p data-hero-fade class="text-lg leading-relaxed text-pretty text-muted sm:text-xl">
+        varve is local-first decision memory for Claude Code, Cursor, Windsurf and any MCP agent.
+        What an agent saves stays inert until a human accepts it, and every commit after that is
+        recorded against it.
+      </p>
+
+      <div data-hero-fade>
+        <Terminal copy={install} title="install" class="w-full">
+          <span class="text-accent-text select-none">$</span>
+          <span class="ml-2">{install}</span>
+        </Terminal>
+      </div>
+    </div>
+  </div>
+
+  {/* The key to the record, as a band across the foot of the frame. Four
+      columns, one per language the column speaks. */}
+  <dl
+    data-hero-fade
+    class="mx-auto grid w-full max-w-[1500px] grid-cols-1 border-t border-line px-5 sm:grid-cols-2 sm:px-8 lg:grid-cols-4"
+  >
+    {
+      legend.map((row, i) => (
+        <div
+          class={`flex flex-col gap-2 py-5 ${
+            i % 2 === 1 ? 'sm:border-l sm:border-line sm:pl-6 lg:pl-8' : ''
+          } ${i === 2 ? 'lg:border-l lg:border-line lg:pl-8' : ''}`}
+        >
+          <span class="block h-2 w-12 shrink-0" data-mark={row.mark} />
+          <dt class="font-mono text-[13px] text-text">{row.key}</dt>
+          <dd class="text-[13px] leading-snug text-pretty text-muted">{row.text}</dd>
+        </div>
+      ))
+    }
+  </dl>
+</section>
+
+<style>
+  /* The legend marks are the same four languages the canvas speaks, drawn in
+     CSS so they stay crisp at any size. */
+  [data-mark] {
+    --ochre: #b86a2f;
+    --clay: #8e5530;
+  }
+  [data-mark='solid'] {
+    background: linear-gradient(180deg, var(--ochre), var(--clay));
+  }
+  [data-mark='hairline'] {
+    background-image: repeating-linear-gradient(
+      90deg,
+      var(--color-muted) 0 9px,
+      transparent 9px 16px
+    );
+    background-size: 100% 1px;
+    background-repeat: no-repeat;
+    background-position: 0 50%;
+    opacity: 0.7;
+  }
+  [data-mark='broken'] {
+    background:
+      linear-gradient(180deg, var(--ochre), var(--clay)) left / 34% 100% no-repeat,
+      linear-gradient(180deg, var(--ochre), var(--clay)) right / 52% 60% no-repeat;
+  }
+  [data-mark='ghost'] {
+    background: var(--color-muted);
+    opacity: 0.22;
+  }
+</style>

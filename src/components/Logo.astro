@@ -1,0 +1,43 @@
+---
+interface Props {
+  class?: string;
+  animate?: boolean;
+}
+const { class: className = 'h-7 w-7', animate = false } = Astro.props;
+
+// The mark is a varve: paired sediment columns, each bar one year's layer.
+const left = [
+  [16, 16, 22],
+  [16, 30, 30],
+  [16, 44, 38],
+  [16, 58, 44],
+  [16, 72, 54],
+  [16, 86, 60],
+  [16, 100, 60],
+];
+const right = [
+  [90, 16, 22],
+  [82, 30, 30],
+  [74, 44, 38],
+  [68, 58, 44],
+  [58, 72, 54],
+  [52, 86, 60],
+  [52, 100, 60],
+];
+---
+
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 128 128"
+  fill="currentColor"
+  role="img"
+  aria-label="varve"
+  class={className}
+>
+  {left.map(([x, y, w]) => <rect x={x} y={y} width={w} height="8" data-logo-bar={animate ? '' : undefined} />)}
+  {
+    right.map(([x, y, w]) => (
+      <rect x={x} y={y} width={w} height="8" data-logo-bar={animate ? '' : undefined} style="transform-box: fill-box; transform-origin: right center" />
+    ))
+  }
+</svg>

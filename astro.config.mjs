@@ -5,7 +5,7 @@ import sitemap from '@astrojs/sitemap';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://memtrace.sh',
+  site: 'https://varve.sh',
   integrations: [sitemap()],
   vite: {
     plugins: [tailwindcss()],

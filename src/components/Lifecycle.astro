@@ -1,0 +1,163 @@
+---
+// Horizontal pan. Motivated: a lifecycle IS a sequence, so scrolling through
+// it left to right is the content's own shape, not decoration.
+const states = [
+  {
+    key: 'proposed',
+    tone: 'muted',
+    strata: 'proposed',
+    body: 'An agent, an importer or the v1 migration saves a decision. It is captured and inert: it does not bind, and it is never packed as context.',
+    cmd: 'varve decision pending',
+  },
+  {
+    key: 'active',
+    tone: 'accent',
+    strata: 'binding',
+    body: 'A human accepts it, with at least one piece of evidence. Now it binds, and it is packed into every session that touches its scope.',
+    cmd: 'varve decision accept 01KMDX --evidence commit:9f2c1ab',
+  },
+  {
+    key: 'violated',
+    tone: 'accent',
+    strata: 'violated',
+    body: 'A commit contradicted it. The rule still binds, and the report says how many unresolved places contradict it. This is not a repeal.',
+    cmd: 'varve report --decision 01KMDX --raw',
+  },
+  {
+    key: 'superseded',
+    tone: 'muted',
+    strata: 'ghost',
+    body: 'Content is immutable once accepted. Changing what a rule says means a successor decision that replaces it, so the history keeps its meaning.',
+    cmd: 'memory_save(topic_key: "decision/database")',
+  },
+  {
+    key: 'reverted',
+    tone: 'muted',
+    strata: 'ghost',
+    body: 'Repealed, terminally. Nothing is deleted: re-adopting the rule later means a new decision citing this one, never a resurrection.',
+    cmd: 'varve decision revert 01KMDX',
+  },
+];
+---
+
+{/* The record recedes to a seam at the far right edge here. The cards pan
+    across the full width, so it has to get out of the way -- and the left
+    margin, which used to be where it went, now belongs to the gauge. */}
+<section
+  id="lifecycle"
+  data-strata="proposed"
+  data-strata-region="0.955,1.005"
+  class="relative overflow-hidden"
+>
+  <div class="mx-auto max-w-[1400px] px-5 pt-16 sm:px-8 lg:pt-24">
+    <div class="flex flex-col gap-6 lg:max-w-[54ch]">
+      <p data-reveal class="section-index flex items-center gap-3">
+        <span class="block h-px w-8 bg-accent"></span>02 &mdash; The lifecycle
+      </p>
+      <h2 data-reveal class="display display-section max-w-[15ch]">
+        A decision is not a row you edit.
+      </h2>
+      <p data-reveal class="text-base leading-relaxed text-muted sm:text-lg">
+        It is a governed object with states, evidence and an append-only history. Here is every
+        state it can reach.
+      </p>
+    </div>
+  </div>
+
+  <div
+    data-lifecycle
+    class="relative mt-14 lg:mt-0 lg:flex lg:h-[82dvh] lg:items-center lg:overflow-hidden"
+  >
+    <div
+      data-lifecycle-track
+      class="flex gap-5 overflow-x-auto px-5 pb-6 sm:px-8 lg:overflow-visible lg:pb-0"
+    >
+      {
+        states.map((s) => (
+          <article
+            data-strata-card={s.strata}
+            class="relative flex min-h-[22rem] w-[78vw] shrink-0 flex-col justify-between border-t border-line pt-6 sm:w-[25rem]"
+          >
+            <div>
+              <h3
+                class={`font-mono text-xl tracking-tight ${
+                  s.tone === 'accent' ? 'text-accent-text' : 'text-text'
+                }`}
+              >
+                {s.key}
+              </h3>
+              <p class="mt-5 max-w-[38ch] leading-relaxed text-muted">{s.body}</p>
+            </div>
+            <code class="mt-8 block truncate border-t border-line pt-4 font-mono text-[11.5px] text-muted">
+              {s.cmd}
+            </code>
+          </article>
+        ))
+      }
+    </div>
+  </div>
+
+  <div class="mx-auto max-w-[1400px] px-5 pt-12 pb-16 sm:px-8 lg:pb-24">
+    <p data-reveal class="max-w-[58ch] text-sm leading-relaxed text-muted">
+      Acceptance, rejection and repeal are CLI actions. There is no MCP tool for them, because an
+      agent asserting that you approved something is exactly the assertion the quarantine exists to
+      distrust.
+    </p>
+  </div>
+</section>
+
+<script>
+  import gsap from 'gsap';
+  import ScrollTrigger from 'gsap/ScrollTrigger';
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  const wrap = document.querySelector<HTMLElement>('[data-lifecycle]');
+  const track = document.querySelector<HTMLElement>('[data-lifecycle-track]');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  const wide = matchMedia('(min-width: 1024px)');
+
+  let ctx: gsap.Context | null = null;
+  let current = '';
+
+  function build() {
+    ctx?.revert();
+    ctx = null;
+
+    // Below lg, or under reduced motion, the track is a plain horizontal
+    // scroller. Same content, no hijack, still fully reachable by keyboard.
+    if (!wrap || !track || reduced.matches || !wide.matches) return;
+
+    ctx = gsap.context(() => {
+      const distance = () => track.scrollWidth - window.innerWidth + 64;
+      gsap.to(track, {
+        x: () => -distance(),
+        ease: 'none',
+        scrollTrigger: {
+          trigger: wrap,
+          start: 'top top',
+          end: () => `+=${distance()}`,
+          pin: true,
+          scrub: 1,
+          invalidateOnRefresh: true,
+          // The card under the reader's eye sets what the record emphasises,
+          // so the canvas and the copy describe the same state at all times.
+          onUpdate: (self) => {
+            const cards = Array.from(track.querySelectorAll<HTMLElement>('[data-strata-card]'));
+            if (!cards.length) return;
+            const i = Math.min(cards.length - 1, Math.floor(self.progress * cards.length + 0.15));
+            const tone = cards[i]?.dataset.strataCard;
+            if (tone && tone !== current) {
+              current = tone;
+              window.dispatchEvent(new CustomEvent('strata:focus', { detail: tone }));
+            }
+          },
+        },
+      });
+    }, wrap);
+  }
+
+  build();
+  wide.addEventListener('change', build);
+  reduced.addEventListener('change', build);
+</script>
