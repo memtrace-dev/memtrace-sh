@@ -95,10 +95,22 @@ export class Strata {
       getComputedStyle every frame is not free. */
   private bg = '#111111';
 
+  /** The same colour as `bg`, kept as channels. The mask has to fade to a
+      TRANSPARENT BACKGROUND, not to transparent black: canvas interpolates
+      gradient stops per channel, so bone -> rgba(0,0,0,0) passes through
+      half-opaque grey and lays a haze down the column's edge. Invisible on
+      ink, obvious on bone. */
+  private bgRgb: [number, number, number] = [17, 17, 17];
+
   /** Neutral ink for the ungoverned tones. Ochre is the brand and never
       changes, but bone-on-bone is invisible, so the neutral follows the
       theme's text colour instead of being hardcoded. */
   private neutral: [number, number, number] = [246, 244, 238];
+
+  /** Which way "darker" reads. On ink, adding pigment catches the light; on
+      bone, adding pigment casts a shadow. Every tone that shades has to know
+      which of the two it is doing. */
+  private light = false;
 
   constructor({ canvas, reduced }: StrataOptions) {
     this.canvas = canvas;
@@ -149,9 +161,13 @@ export class Strata {
   readBackground() {
     const style = getComputedStyle(document.documentElement);
     const v = style.getPropertyValue('--bg').trim();
-    if (v) this.bg = v;
+    if (v) {
+      this.bg = v;
+      if (v.startsWith('#')) this.bgRgb = hexToRgb(v);
+    }
     const t = style.getPropertyValue('--text').trim();
     if (t.startsWith('#')) this.neutral = hexToRgb(t);
+    this.light = !document.documentElement.classList.contains('dark');
     this.dirty = true;
     if (this.reduced) this.draw();
   }
@@ -327,7 +343,7 @@ export class Strata {
     ctx.fillRect(0, 0, Math.max(0, edge - fade), h);
     const grad = ctx.createLinearGradient(Math.max(0, edge - fade), 0, edge + fade * 0.35, 0);
     grad.addColorStop(0, this.bg);
-    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    grad.addColorStop(1, rgba(this.bgRgb, 0));
     ctx.fillStyle = grad;
     ctx.fillRect(Math.max(0, edge - fade), 0, fade * 1.35, h);
   }
@@ -351,13 +367,26 @@ export class Strata {
       case 'binding': {
         const a = (0.92 + lift) * (1 - dim);
         const g = ctx.createLinearGradient(0, y, 0, y + t);
-        g.addColorStop(0, rgba(PALETTE.ochre, a));
-        g.addColorStop(0.55, rgba(PALETTE.ochre, a * 0.86));
-        g.addColorStop(1, rgba(PALETTE.clay, a * 0.7));
+        if (this.light) {
+          // On bone, a band that deepens toward its foot reads as a drop
+          // shadow rather than as depth. So the pigment settles at the top
+          // seam and thins downward, which is how a band actually sits on
+          // paper, and the band keeps a flat foot.
+          g.addColorStop(0, rgba(PALETTE.clay, a * 0.8));
+          g.addColorStop(0.3, rgba(PALETTE.ochre, a * 0.8));
+          g.addColorStop(1, rgba(PALETTE.ochre, a * 0.72));
+        } else {
+          g.addColorStop(0, rgba(PALETTE.ochre, a));
+          g.addColorStop(0.55, rgba(PALETTE.ochre, a * 0.86));
+          g.addColorStop(1, rgba(PALETTE.clay, a * 0.7));
+        }
         ctx.fillStyle = g;
         ctx.fillRect(x0, y, x1 - x0, t);
-        // A brighter seam on top, which is what catches the light on a core.
-        ctx.fillStyle = rgba(PALETTE.ochre, Math.min(1, a + 0.22));
+        // The seam on top: what catches the light on ink, what the pigment
+        // pools into on bone. Opposite colours, same job.
+        ctx.fillStyle = this.light
+          ? rgba(PALETTE.clay, Math.min(1, a * 0.92))
+          : rgba(PALETTE.ochre, Math.min(1, a + 0.22));
         ctx.fillRect(x0, y, x1 - x0, 1);
         break;
       }
@@ -385,14 +414,19 @@ export class Strata {
         ctx.setLineDash([]);
         break;
       }
+      // The ungoverned tones are painted in the theme's ink, and on bone that
+      // ink is near-black. At the weights that read as "quiet" on a dark page
+      // they read as a hard grey strip on a light one -- and because the deck
+      // puts a note directly under every binding band, that strip lands
+      // exactly where a drop shadow would. Lighter on bone, same intent.
       case 'ghost': {
-        const a = (0.2 + lift * 0.45) * (1 - dim);
+        const a = ((this.light ? 0.12 : 0.2) + lift * 0.45) * (1 - dim);
         ctx.fillStyle = rgba(this.neutral, a);
         ctx.fillRect(x0, y, x1 - x0, t);
         break;
       }
       case 'note': {
-        const a = (0.26 + lift * 0.5) * (1 - dim);
+        const a = ((this.light ? 0.15 : 0.26) + lift * 0.5) * (1 - dim);
         ctx.fillStyle = rgba(this.neutral, a);
         ctx.fillRect(x0, y, x1 - x0, t * 0.5);
         break;
